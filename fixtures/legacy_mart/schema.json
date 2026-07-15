@@ -1,0 +1,52 @@
+{
+  "store_id": "legacy_mart_demo",
+  "name": "Legacy Mart Demo",
+  "sources": [
+    {
+      "name": "old_pos_sql",
+      "kind": "sql_server_schema_export",
+      "tables": [
+        {
+          "name": "Mst_Itm",
+          "columns": [
+            {"name": "Item_No", "type": "varchar", "samples": ["SKU-TEA-250", "SKU-RICE-5K"]},
+            {"name": "Itm_Name", "type": "varchar", "samples": ["Tea 250g", "Rice 5kg"]},
+            {"name": "CtnFactor", "type": "integer", "samples": [24, 6]}
+          ]
+        },
+        {
+          "name": "Pur_Dtl_26",
+          "columns": [
+            {"name": "ItmRef", "type": "varchar", "samples": ["SKU-TEA-250"]},
+            {"name": "QntyRcvd", "type": "decimal", "samples": [1, 3]},
+            {"name": "LoosePc", "type": "integer", "samples": [5, 0]},
+            {"name": "GoDown_No", "type": "varchar", "samples": ["GD-A", null]}
+          ]
+        },
+        {
+          "name": "Cctv_Map",
+          "columns": [
+            {"name": "Feed_Channel", "type": "varchar", "samples": ["NVR1-CH04"]},
+            {"name": "AreaText", "type": "varchar", "samples": ["Receiving bay"]}
+          ]
+        },
+        {
+          "name": "Emp_Mst",
+          "columns": [
+            {"name": "EmpNo", "type": "varchar", "samples": ["E014"]},
+            {"name": "EmpDuty", "type": "varchar", "samples": ["DEO", "Godown"]},
+            {"name": "Badge_No", "type": "varchar", "samples": ["B014"]}
+          ]
+        },
+        {
+          "name": "Bill_Dtl",
+          "columns": [
+            {"name": "ItmRef", "type": "varchar", "samples": ["SKU-TEA-250"]},
+            {"name": "BillQty", "type": "integer", "samples": [2, 1]}
+          ]
+        }
+      ]
+    }
+  ]
+}
+

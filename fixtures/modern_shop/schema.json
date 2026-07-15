@@ -1,0 +1,46 @@
+{
+  "store_id": "modern_shop_demo",
+  "name": "Modern Shop Demo",
+  "sources": [
+    {
+      "name": "operations_api",
+      "kind": "json_schema",
+      "tables": [
+        {
+          "name": "products",
+          "columns": [
+            {"name": "product_code", "type": "string", "samples": ["SKU-TEA-250"]},
+            {"name": "units_per_case", "type": "integer", "samples": [24]}
+          ]
+        },
+        {
+          "name": "receipts",
+          "columns": [
+            {"name": "received_qty", "type": "integer", "samples": [29]},
+            {"name": "destination_id", "type": "string", "samples": ["warehouse-a"]}
+          ]
+        },
+        {
+          "name": "camera_channels",
+          "columns": [
+            {"name": "camera_zone", "type": "string", "samples": ["receiving_bay"]}
+          ]
+        },
+        {
+          "name": "staff",
+          "columns": [
+            {"name": "staff_role", "type": "string", "samples": ["data_entry_operator"]},
+            {"name": "staff_id", "type": "string", "samples": ["staff-14"]}
+          ]
+        },
+        {
+          "name": "sales",
+          "columns": [
+            {"name": "sale_qty", "type": "integer", "samples": [2]}
+          ]
+        }
+      ]
+    }
+  ]
+}
+

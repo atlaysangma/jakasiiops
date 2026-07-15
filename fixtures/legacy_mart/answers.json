@@ -1,0 +1,8 @@
+{
+  "map:product.identity": "old_pos_sql.Mst_Itm.Item_No",
+  "verify:purchase.quantity": "old_pos_sql.Pur_Dtl_26.QntyRcvd",
+  "verify:product.pack_size": "old_pos_sql.Mst_Itm.CtnFactor",
+  "verify:movement.destination": "old_pos_sql.Pur_Dtl_26.GoDown_No",
+  "verify:camera.zone": "old_pos_sql.Cctv_Map.Feed_Channel",
+  "verify:staff.role": "old_pos_sql.Emp_Mst.EmpDuty"
+}
