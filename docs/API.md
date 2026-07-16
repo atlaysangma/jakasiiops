@@ -53,8 +53,12 @@ Supported event types: `receiving`, `stock_movement`, `stock_count`, `damage`,
 `POST /stores/{store_id}/tasks/{task_id}/answer`
 
 ```json
-{"actor":"godown-staff-14","answer":{"received_quantity":29,"location":"GD-A"}}
+{"actor":"godown-staff-14","answer":{"confirmed":true,"received_quantity":29,"location":"GD-A"}}
 ```
+
+A positive operational confirmation can complete a proof bundle only when the
+same event already has linked SQL evidence and nearby camera timing context.
+The API does not claim the camera identified the SKU or quantity.
 
 ## Action policy
 
@@ -89,6 +93,10 @@ future connector executor must accept only approved requests.
 - `GET /stores/{store_id}/questions`
 - `GET /stores/{store_id}/tasks`
 - `GET /stores/{store_id}/actions`
+- `GET /stores/{store_id}/schema` — sanitized metadata catalog; no row samples
+- `GET /stores/{store_id}/awareness` — unverified structural role and relationship model
+- `GET /stores/{store_id}/snapshot` — source freshness, evidence coverage, and open role work
+- `GET /stores/{store_id}/proofs` — strict SQL + camera-context + human-confirmation bundles
+- `GET /stores/{store_id}/agent` — latest continuous-agent cycle health and imports
 - `GET /stores/{store_id}/memory`
 - `GET /stores/{store_id}/audit`
-

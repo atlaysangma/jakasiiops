@@ -38,6 +38,23 @@ the contracts and JSON API in this repository.
   changes for approval, and rejects prohibited actions.
 - A localhost-only headless JSON API. No dashboard is included.
 - Offline deterministic reasoning plus an optional local Ollama adapter.
+- Live SQL Server catalog discovery with table sizes, declared relationships,
+  inferred operational roles, and unverified join hypotheses.
+- Authorized local camera-system discovery: channel registry, device-port
+  reachability, and existing collector SQLite schemas without DVR credentials.
+- Deduplicated ingestion of safe camera-event metadata as observations; frames,
+  snapshot paths, RTSP URLs, and official stock changes remain outside this step.
+- Optional Firestore staff-role discovery that requests only the `role` field and
+  stores aggregate counts—never UIDs, names, emails, photos, or attendance locations.
+- Privacy-minimized ingestion of collector human labels and SQL facts as distinct
+  human-confirmation and system-record evidence.
+- A learned-schema SQL cycle that derives recent purchase/sale line queries from
+  awareness roles, inferred joins, and mappings—without embedded store table names.
+- An operational snapshot that reports source freshness, evidence coverage,
+  uncorroborated records, and open work by role without copying evidence payloads.
+- A continuous headless store agent that periodically rescans schemas, polls all
+  authorized evidence sources, runs workflows, refreshes memory, and isolates
+  connector failures so one unavailable system does not stop the store loop.
 
 ## Quick start
 
@@ -51,6 +68,13 @@ python -m pip install -e .
 python -m unittest discover -s tests -v
 jakasii-ops --data-root data demo --fixture legacy_mart
 jakasii-ops --data-root data demo --fixture modern_shop
+```
+
+Install the optional Firestore adapter only on a machine authorized to inspect
+staff-role metadata:
+
+```powershell
+python -m pip install -e ".[firestore]"
 ```
 
 The legacy demo intentionally proposes the wrong purchase-quantity column
@@ -85,6 +109,10 @@ GET /stores/{store_id}/readiness
 GET /stores/{store_id}/questions
 GET /stores/{store_id}/tasks
 GET /stores/{store_id}/actions
+GET /stores/{store_id}/schema
+GET /stores/{store_id}/awareness
+GET /stores/{store_id}/snapshot
+GET /stores/{store_id}/agent
 GET /stores/{store_id}/memory
 GET /stores/{store_id}/audit
 ```
@@ -113,6 +141,220 @@ OpenAI API billing are separate. A future OpenAI provider will implement the
 same `ReasoningProvider` boundary after a usable API credential is deliberately
 configured. No API secret belongs in source control or store memory.
 
+## Discover a live SQL Server schema
+
+For a local main-server installation, JAKASII can first discover both connection
+scopes without receiving a database name or camera folder:
+
+```powershell
+jakasii-ops --data-root data bootstrap-store `
+  --store-id your_store `
+  --store-name "Your Store"
+
+jakasii-ops --data-root C:\JakasiiData auto-watch-store `
+  --store-id your_store `
+  --store-name "Your Store"
+```
+
+The bounded bootstrap checks accessible local SQL Server instances, enumerates
+user databases with a fixed metadata query, ranks their generic operational
+roles, and scans approved local roots for compatible camera-channel JSON. By
+default the approved root is the current user's home folder, with depth/file
+limits and exclusions for AppData, Git, virtual environments, and
+`node_modules`. It never returns camera passwords, RTSP URLs, business rows, or
+credential contents. A staff credential still requires explicit authorization
+through the option or environment because JAKASII must not search for secrets.
+
+On a Windows host with `sqlcmd` installed, JAKASII can inspect an authorized
+database through the current Windows account:
+
+```powershell
+jakasii-ops --data-root data onboard-sqlserver `
+  --server localhost `
+  --database YourDatabase `
+  --store-id your_store `
+  --store-name "Your Store"
+```
+
+The connector runs fixed `sys.tables`/`sys.columns` catalog queries, discovers
+all user tables and columns, then sends that raw metadata through the same
+mapping and readiness engine used by fixture onboarding. It does not contain
+store-specific table names, execute arbitrary SQL, modify the source database,
+or sample business rows during automatic discovery. Any unresolved meaning is
+returned as a setup question instead of being silently accepted. The metadata
+catalog is retained in local SQLite and `store-memory/<store>/Learning/` without
+row samples, passwords, or authentication tokens.
+
+After discovery, JAKASII can validate a small allowlist of high-impact meanings
+using aggregate shape checks only:
+
+```powershell
+jakasii-ops --data-root data validate-sql-mappings `
+  --server localhost `
+  --database YourDatabase `
+  --store-id your_store `
+  --store-name "Your Store"
+```
+
+These checks retain only counts and ratios such as null coverage, uniqueness,
+positive-value coverage, and structural-role confidence. They do not return or
+persist product codes, row values, names, prices, amounts, or personal fields.
+Weak or empty meanings stay unresolved for a human instead of being guessed.
+
+## Discover a complete store setup
+
+Point JAKASII at an authorized SQL database and the existing local camera
+collector directory. These are connection scopes, not schema hints:
+
+```powershell
+jakasii-ops --data-root data onboard-store `
+  --server localhost `
+  --database YourDatabase `
+  --camera-root C:\path\to\camera-collector `
+  --staff-service-account C:\secure\firebase-credential.json `
+  --store-id your_store `
+  --store-name "Your Store"
+```
+
+JAKASII scans the SQL catalog, declared relationships, table sizes, camera
+channel configuration, device-port reachability, compatible local camera event
+schemas, and (when authorized) aggregate staff routing roles. It creates
+`Learning/Store-Awareness.md` plus a structured JSON artifact containing role
+and relationship hypotheses. The service-account path and contents are never
+persisted. An authorized camera or staff connector may declare the exact
+meaning of its own fields through a semantic contract; SQL meanings still need
+strong aggregate validation or human confirmation.
+
+Import new observation metadata from the existing collector:
+
+```powershell
+jakasii-ops --data-root data ingest-camera-events `
+  --camera-root C:\path\to\camera-collector `
+  --store-id your_store
+
+jakasii-ops --data-root data awareness your_store
+```
+
+The event adapter imports channel, time, detector and count metadata only. It
+does not import images or snapshot paths, log in to the DVR, or turn an
+observation into a stock transaction. Live RTSP collection remains the job of
+the shop's authorized camera collector.
+
+Import already-verified collector labels and SQL facts without merging their
+truth categories:
+
+```powershell
+jakasii-ops --data-root data ingest-verified-operations `
+  --collector-root C:\path\to\camera-collector `
+  --store-id your_store
+```
+
+This adapter drops staff identities, names, free-text notes, monetary amounts,
+and raw source document IDs. It keeps only the minimum operational fields and a
+short hash that can detect repeated source records locally.
+
+After onboarding, let JAKASII derive a bounded read-only transaction plan from
+its learned model and route newly observed lines through the workflows:
+
+```powershell
+jakasii-ops --data-root data run-sql-cycle `
+  --server localhost `
+  --database YourDatabase `
+  --store-id your_store `
+  --store-name "Your Store" `
+  --limit 5
+
+jakasii-ops --data-root data snapshot your_store --window-minutes 15
+jakasii-ops --data-root data proofs your_store --window-minutes 15
+```
+
+The cycle selects only product code, quantity, pack size, destination, and
+timestamp. Source record identifiers are hashed before persistence. Customer,
+supplier, staff, product-name, price, and amount fields are not selected.
+Unconfirmed mappings keep resulting events in `needs_verification`; successful
+query execution is not treated as proof of business meaning.
+
+The proof report is stricter than the snapshot. It becomes
+`evidence_complete` only when one operational event has an exact linked SQL
+record, a camera observation inside the time window, and a positive answer to
+the role-routed staff task. It never claims that camera timing identified the
+product or quantity, and it never treats the bundle as an official stock write.
+
+## Run continuously on a store server
+
+`watch-store` combines onboarding, camera polling, verified-label polling, SQL
+mapping validation, fact discovery, workflow routing, deduplication and
+snapshot refresh. Omit
+`--max-cycles` for continuous operation:
+
+```powershell
+jakasii-ops --data-root C:\JakasiiData watch-store `
+  --server localhost `
+  --database YourDatabase `
+  --camera-root C:\path\to\camera-collector `
+  --staff-service-account C:\secure\firebase-credential.json `
+  --store-id your_store `
+  --store-name "Your Store" `
+  --poll-seconds 30 `
+  --rescan-seconds 3600
+```
+
+On its first production start, watch mode records source cursors without
+creating evidence, events, or tasks for old rows. Only records appearing after
+that baseline are acted on. Use `--backfill-existing` deliberately when a
+historical review is wanted; the deterministic demo and one-shot
+`run-sql-cycle` remain available for judge testing.
+
+Each cycle persists a privacy-safe health record available at
+`GET /stores/{store_id}/agent`. Credential paths, connection secrets and raw
+connector error messages are excluded. The agent remains read-only toward SQL,
+Firestore and camera systems; official actions still require approval through
+the existing policy boundary.
+
+For a real Windows store deployment, build and transfer the offline package
+instead of running the development checkout directly. The installer creates an
+isolated runtime, registers a disabled user-scoped scheduled task, and requires
+an explicit review/start step. See
+[docs/MAIN_SERVER_DEPLOYMENT.md](docs/MAIN_SERVER_DEPLOYMENT.md). A laptop that
+does not have the live camera collector is a build/test machine, not a
+production watcher.
+
+Camera configuration and live camera runtime are different states. The agent
+checks a sanitized collector heartbeat and event-store freshness every cycle.
+If the collector is stopped or stale, it says that fresh physical proof is
+unavailable and creates one deduplicated `pending_approval` action asking the
+owner to authorize and start the collector. That action never contains or asks
+JAKASII to store DVR/database secret values.
+
+Inspect and approve the request locally when the owner is ready:
+
+```powershell
+jakasii-ops --data-root C:\JakasiiData actions your_store
+jakasii-ops --data-root C:\JakasiiData approve-action your_store action_... `
+  --actor owner
+```
+
+Approval alone does not supply a password. On the next agent start/cycle, the
+generic manifest launcher executes only an approved collector action and only
+when every required environment variable is available to that process. It uses
+no shell, accepts only a relative Python entry point inside the discovered
+collector root, and persists no secret value.
+
+Provision the required value through a hidden prompt on the store PC—not chat,
+source code, JSON, or a batch file:
+
+```powershell
+jakasii-ops --data-root C:\JakasiiData configure-camera-access `
+  --store-id your_store `
+  --store-name "Your Store"
+```
+
+The command autonomously rediscovers the collector manifest and writes each
+required secret to the current Windows user's Credential Manager. Output and
+audit state contain variable names only. `auto-watch-store` reads available
+values into process memory and passes them to the approved collector child;
+the values never enter JAKASII SQLite, Markdown memory, logs, or action payloads.
+
 ## Trust rules
 
 1. A camera event is an observation, not a stock transaction.
@@ -129,6 +371,7 @@ configured. No API secret belongs in source control or store memory.
 ```text
 src/jakasii_ops/
   onboarding.py   schema discovery, mapping, questions, readiness
+  awareness.py    structural store roles, relationships and capability model
   workflows.py    operational verification rules
   brain.py        headless coordinator and task/action outbox
   storage.py      exact SQLite records and audit log
@@ -136,6 +379,11 @@ src/jakasii_ops/
   reasoning.py    deterministic and optional local Ollama providers
   actions.py      authority and approval policy gate
   connectors.py   contracts for databases, cameras, apps and future hands
+  validation.py   aggregate-only SQL mapping verification
+  situational.py  evidence coverage and operational snapshots
+  proof.py        strict real-operation evidence bundles
+  agent.py        continuous failure-isolated store loop
+  bootstrap.py    bounded autonomous local connection discovery
   api.py           localhost JSON service
 fixtures/          two synthetic, independently shaped stores
 tests/             onboarding, workflows, evidence and policy tests
@@ -212,4 +460,3 @@ Pre-existing and not claimed as Build Week work:
 
 See [HACKATHON.md](HACKATHON.md) for the compliance checklist and remaining
 submission artifacts.
-

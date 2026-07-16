@@ -78,6 +78,7 @@ assets.
 ## Product boundary
 
 JAKASII Ops is the new headless brain. Existing POS, camera, staff, boss, and
-customer systems are future connector targets and are not included or claimed
-as hackathon implementation.
-
+customer systems are not included or claimed as hackathon implementation. New
+generic adapters in this repository may discover their authorized metadata or
+consume their normalized event contracts; that integration layer is hackathon
+work, while the external systems and their historical data remain pre-existing.

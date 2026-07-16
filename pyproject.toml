@@ -12,6 +12,9 @@ license = {text = "MIT"}
 authors = [{name = "Atlay"}]
 dependencies = []
 
+[project.optional-dependencies]
+firestore = ["firebase-admin>=6.5,<8"]
+
 [project.scripts]
 jakasii-ops = "jakasii_ops.cli:main"
 
@@ -20,4 +23,3 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

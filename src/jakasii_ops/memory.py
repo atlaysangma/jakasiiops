@@ -113,6 +113,64 @@ class StoreMemory:
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return path
 
+    def write_awareness(self, awareness: dict[str, Any]) -> Path:
+        folder = self.root / "Learning"
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "Store-Awareness.md"
+        lines = [
+            "---",
+            f"store_id: {self.store_id}",
+            f"generated: {awareness.get('generated_at')}",
+            "verified: false",
+            "source: structural-metadata-only",
+            "---",
+            "",
+            "# Store Awareness",
+            "",
+            "This is JAKASII's current hypothesis, not an approved business truth.",
+            "",
+            f"- Sources inspected: **{len(awareness.get('sources', []))}**",
+            f"- Tables discovered: **{awareness.get('table_count', 0)}**",
+            f"- Columns discovered: **{awareness.get('column_count', 0)}**",
+            f"- Camera channels discovered: **{awareness.get('camera_channel_count', 0)}**",
+            f"- Declared relationships: **{len(awareness.get('declared_relationships', []))}**",
+            f"- Candidate relationships: **{len(awareness.get('inferred_relationships', []))}**",
+            "",
+            "## Capabilities observed",
+            "",
+        ]
+        capabilities = awareness.get("capabilities_observed", [])
+        lines.extend(f"- `{item}`" for item in capabilities)
+        if not capabilities:
+            lines.append("- None yet")
+        lines.extend(["", "## Unresolved concepts", ""])
+        unknowns = awareness.get("unknowns", [])
+        lines.extend(f"- [ ] `{item}`" for item in unknowns)
+        if not unknowns:
+            lines.append("- None")
+        lines.extend(["", "## Leading structural hypotheses", ""])
+        for role, candidates in sorted(awareness.get("role_candidates", {}).items()):
+            if not candidates:
+                continue
+            leading = candidates[0]
+            lines.append(
+                f"- `{role}` ← `{leading['source_path']}` "
+                f"(unverified, confidence {leading['confidence']:.2f})"
+            )
+        lines.extend(
+            [
+                "",
+                "## Next safe step",
+                "",
+                awareness.get(
+                    "next_safe_step",
+                    "Confirm structural hypotheses before reading business rows.",
+                ),
+            ]
+        )
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return path
+
     def append_exception(self, event_id: str, summary: str, evidence_ids: list[str]) -> Path:
         folder = self.root / "Exceptions"
         folder.mkdir(parents=True, exist_ok=True)
@@ -129,6 +187,87 @@ class StoreMemory:
             + "\n",
             encoding="utf-8",
         )
+        return path
+
+    def write_operational_snapshot(self, snapshot: dict[str, Any]) -> Path:
+        folder = self.root / "Learning"
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "Operational-Snapshot.md"
+        lines = [
+            "---",
+            f"store_id: {self.store_id}",
+            f"generated: {snapshot.get('generated_at')}",
+            f"state: {snapshot.get('state')}",
+            "---",
+            "",
+            "# Operational Snapshot",
+            "",
+            "## What JAKASII currently sees",
+            "",
+        ]
+        for kind, count in snapshot.get("evidence_counts", {}).items():
+            lines.append(f"- `{kind}` evidence: **{count}**")
+        lines.extend(["", "## Open work", ""])
+        roles = snapshot.get("open_tasks_by_role", {})
+        lines.extend(f"- `{role}`: **{count}**" for role, count in roles.items())
+        if not roles:
+            lines.append("- No open verification tasks")
+        correlation = snapshot.get("correlation", {})
+        lines.extend(
+            [
+                "",
+                "## Cross-source coverage",
+                "",
+                f"- Temporally matched system records: **{correlation.get('corroborated_system_records', 0)}**",
+                f"- System records without nearby camera evidence: **{correlation.get('uncorroborated_system_records', 0)}**",
+                f"- Unlinked camera observations: **{correlation.get('unlinked_observations', 0)}**",
+                "- Camera timing is supporting context, never physical verification by itself.",
+                "",
+                "## Attention",
+                "",
+            ]
+        )
+        attention = snapshot.get("attention", [])
+        lines.extend(f"- {item}" for item in attention)
+        if not attention:
+            lines.append("- No unresolved attention items")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return path
+
+    def write_operation_proofs(self, report: dict[str, Any]) -> Path:
+        folder = self.root / "Learning"
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "Operation-Proofs.md"
+        lines = [
+            "---",
+            f"store_id: {self.store_id}",
+            f"generated: {report.get('generated_at')}",
+            f"complete_count: {report.get('complete_count', 0)}",
+            "---",
+            "",
+            "# Real Operation Proofs",
+            "",
+            report.get("proof_definition", ""),
+            "",
+        ]
+        for proof in report.get("proofs", []):
+            lines.extend(
+                [
+                    f"## {proof.get('event_type')} — `{proof.get('event_id')}`",
+                    "",
+                    f"- State: **{proof.get('state')}**",
+                    f"- Occurred: {proof.get('occurred_at')}",
+                    f"- Database evidence: **{len(proof.get('system_evidence_ids', []))}**",
+                    f"- Nearby camera context: **{'yes' if proof.get('camera_observation_id') else 'no'}**",
+                    f"- Positive role confirmation: **{'yes' if proof.get('positive_confirmation_task_ids') else 'no'}**",
+                    "- Camera identifies SKU/quantity: **no**",
+                    "- JAKASII wrote an official record: **no**",
+                    "",
+                ]
+            )
+        if not report.get("proofs"):
+            lines.append("No operational event has been observed yet.")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return path
 
     def export_snapshot(self) -> dict[str, str]:

@@ -36,6 +36,8 @@ class WorkflowEngine:
     def _check_receiving(self, event: OperationalEvent) -> WorkflowResult:
         facts = event.facts
         tasks: list[VerificationTask] = []
+        if facts.get("mapping_verified") is False:
+            tasks.append(self._task(event, "manager", "Confirm JAKASII's product and quantity mapping for this source.", "The transaction is real, but its newly discovered schema meaning is not yet human-confirmed."))
         if not facts.get("product_id"):
             tasks.append(self._task(event, "data_entry_operator", "Which SKU was received?", "Receiving evidence has no verified product identity."))
         if facts.get("cartons") is not None and not facts.get("pack_size"):
@@ -90,6 +92,8 @@ class WorkflowEngine:
     def _check_sale(self, event: OperationalEvent) -> WorkflowResult:
         facts = event.facts
         tasks: list[VerificationTask] = []
+        if facts.get("mapping_verified") is False:
+            tasks.append(self._task(event, "manager", "Confirm JAKASII's sale-line mapping for this source.", "The POS row is real, but its newly discovered schema meaning is not yet human-confirmed."))
         if not facts.get("product_id") or facts.get("quantity") is None:
             tasks.append(self._task(event, "data_entry_operator", "Repair the sale line with a product and base-unit quantity.", "POS sale record is incomplete."))
         if facts.get("stock_after") is not None and facts["stock_after"] < 0:
@@ -121,4 +125,3 @@ class WorkflowEngine:
     def _check_generic(self, event: OperationalEvent) -> WorkflowResult:
         task = self._task(event, "manager", "Review this unsupported operational event.", "No approved workflow is configured for this event type.")
         return WorkflowResult(event, [task], "Unsupported event routed to manager")
-

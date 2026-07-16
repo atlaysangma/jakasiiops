@@ -51,6 +51,12 @@ class ApiTests(unittest.TestCase):
         )
         self.assertTrue(onboard["readiness"]["ready"])
         store_id = onboard["profile"]["store_id"]
+        schema = self.request("GET", f"/stores/{store_id}/schema")
+        self.assertEqual(store_id, schema["store_id"])
+        self.assertTrue(schema["sources"][0]["tables"])
+        awareness = self.request("GET", f"/stores/{store_id}/awareness")
+        self.assertEqual(store_id, awareness["store_id"])
+        self.assertIn("product_catalog", awareness["capabilities_observed"])
         evidence = self.request(
             "POST",
             f"/stores/{store_id}/evidence",
@@ -84,8 +90,21 @@ class ApiTests(unittest.TestCase):
         self.assertEqual("answered", answered["status"])
         audit = self.request("GET", f"/stores/{store_id}/audit")
         self.assertGreaterEqual(len(audit), 5)
+        snapshot = self.request("GET", f"/stores/{store_id}/snapshot")
+        self.assertEqual(1, snapshot["evidence_counts"]["system_record"])
+        self.assertIn("godown_staff", snapshot["open_tasks_by_role"])
+        proofs = self.request("GET", f"/stores/{store_id}/proofs")
+        self.assertEqual("awaiting_camera_context", proofs["proofs"][0]["state"])
+        self.assertTrue(
+            (
+                Path(self.temp.name)
+                / "store-memory"
+                / store_id
+                / "Learning"
+                / "Operational-Snapshot.md"
+            ).exists()
+        )
 
 
 if __name__ == "__main__":
     unittest.main()
-

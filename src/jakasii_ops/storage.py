@@ -80,6 +80,13 @@ class OpsStore:
             ).fetchone()
         return json.loads(row["body"]) if row else None
 
+    def delete_records(self, store_id: str, kind: str) -> None:
+        with self._lock:
+            self.connection.execute(
+                "DELETE FROM records WHERE store_id = ? AND kind = ?", (store_id, kind)
+            )
+            self.connection.commit()
+
     def set_setting(self, store_id: str, key: str, value: Any) -> None:
         with self._lock:
             self.connection.execute(
